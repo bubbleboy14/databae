@@ -79,7 +79,7 @@ def hashpass(password, date):
     return hashlib.md5((password + str(date.date()).replace('-','')).encode()).hexdigest()
 
 def blobify(d, blobifier, extant=None):
-    for key, prop in list(db.get_schema(d["modelName"]).items()):
+    for key, prop in list(get_schema(d["modelName"]).items()):
         if prop == "blob" and d[key]:
             entkey = d.get("gaekey", d["key"])
             if extant and getattr(extant, key): # skip if some blob is present.........
