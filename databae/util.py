@@ -1,6 +1,7 @@
 import operator, base64, json, hashlib, requests
 from datetime import datetime
 from six import string_types
+from fyg.util import log
 
 modbulkers = {}
 modelsubs = {}
