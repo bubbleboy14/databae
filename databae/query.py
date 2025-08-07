@@ -1,4 +1,4 @@
-from sqlalchemy.sql import func, elements, select
+from sqlalchemy.sql import func, elements
 from fyg.util import log, start_timer, end_timer
 from fyg import config as confyg
 from six import string_types
@@ -14,8 +14,12 @@ class Query(object):
     def __init__(self, mod, *args, **kwargs):
         self.mod = mod
         self.schema = get_schema(mod)
+        self.cols = kwargs.pop("cols", None)
+        if self.cols and type(self.cols[0]) is str:
+            self.cols = [getattr(self.mod, c) for c in self.cols]
         self.session = kwargs.pop("session", None) or seshman.get()
-        self.query = kwargs.pop("query", self.session.query(mod))
+        sq = self.session.query
+        self.query = kwargs.pop("query", None) or (self.cols and sq(*self.cols) or sq(mod))
         for fname in _passthru:
             setattr(self, fname, self._qpass(fname))
         for fname in _qmod:
@@ -71,11 +75,6 @@ class Query(object):
     def copy(self, *args, **kwargs):
         kwargs["query"] = self.query
         return Query(self.mod, *args, **kwargs)
-
-    def select(self, *cols):
-        if type(cols[0]) is str:
-            cols = [getattr(self.mod, c) for c in cols]
-        return list(self.query.session.execute(select(*cols)))
 
     def fetch(self, limit=None, offset=0, keys_only=False):
         if limit:
