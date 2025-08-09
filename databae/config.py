@@ -3,6 +3,7 @@ from fyg import Config
 config = Config({
 	"prags": None,
 	"cache": True,
+	"optimize": False,
 	"refcount": False,
 	"main": "sqlite:///data.db",
 	"test": "sqlite:///data_test.db",

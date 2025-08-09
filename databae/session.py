@@ -40,6 +40,14 @@ def init_prags(dbapi_connection, connection_record):
 		slog("pragma", p, ":", prev, "->", val(pstr))
 	cursor.close()
 
+@event.listens_for(Engine, "close")
+def optimize(dbapi_connection, connection_record):
+	if not dcfg.optimize: return
+	cursor = dbapi_connection.cursor()
+	cursor.execute("PRAGMA optimize")
+	slog("optimize")
+	cursor.close()
+
 def add_column(mod, col): # sqlite only
 	log("adding '%s' to '%s'"%(col, mod))
 	conn_ex('ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col))
