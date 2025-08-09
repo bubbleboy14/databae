@@ -1,6 +1,7 @@
 from fyg import Config
 
 config = Config({
+	"prags": None,
 	"cache": True,
 	"refcount": False,
 	"main": "sqlite:///data.db",

@@ -1,7 +1,8 @@
 import threading
 from sqlalchemy import text
 from sqlalchemy.pool import NullPool
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy.engine import Engine
+from sqlalchemy import create_engine, MetaData, event
 from sqlalchemy.orm import scoped_session, sessionmaker
 from fyg.util import log, error, confirm
 from fyg import config as confyg
@@ -10,38 +11,62 @@ from .config import config as dcfg
 pcfg = dcfg.pool
 metadata = MetaData()
 
+def slog(*msg):
+	if "db" in confyg.log.allow:
+		log("[db] session | %s"%(" ".join([str(m) for m in msg]),))
+
 def conn_ex(cmd):
-    log("issuing command: %s"%(cmd,), important=True)
-    with session.engine.connect() as conn:
-        conn.execute(text(cmd))
+	log("issuing command: %s"%(cmd,), important=True)
+	with session.engine.connect() as conn:
+		conn.execute(text(cmd))
+
+prags = {
+	"fast": { # sqlite
+		"journal_mode": "WAL",
+		"synchronous": "normal"
+	}
+}
+
+@event.listens_for(Engine, "connect")
+def init_prags(dbapi_connection, connection_record):
+	if not dcfg.prags: return
+	cursor = dbapi_connection.cursor()
+	ex = lambda s : cursor.execute(s)
+	val = lambda s : ex(s).fetchall()[0][0]
+	for p, v in prags[dcfg.prags].items():
+		pstr = "PRAGMA %s"%(p,)
+		prev = val(pstr)
+		ex("%s = %s"%(pstr, v))
+		slog("pragma", p, ":", prev, "->", val(pstr))
+	cursor.close()
 
 def add_column(mod, col): # sqlite only
-    log("adding '%s' to '%s'"%(col, mod))
-    conn_ex('ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col))
+	log("adding '%s' to '%s'"%(col, mod))
+	conn_ex('ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col))
 
 def handle_error(e, session=None, polytype=None, flag=" no such column: "):
-    log("Database operation failed: %s"%(e,), important=True)
-    session = session or seshman.get()
-    raise_anyway = True
-    stre = str(e)
-    if flag in stre:
-        target = stre.split(flag)[1].split(None, 1)[0]
-        log("Missing column: %s"%(target,), important=True)
-        if dcfg.alter:
-            if "." in target:
-                tmod, tcol = target.split(".")
-            else:
-                tcol = target
-                tmod = polytype
-            if dcfg.alter == "auto" or confirm("Add missing column '%s' to table '%s' (sqlite-only!)"%(tcol, tmod), True):
-                log("rolling back session")
-                session.rollback()
-                raise_anyway = False
-                add_column(tmod, tcol)
-        else:
-            log("To auto-update columns, add 'DB_ALTER = True' to your ct.cfg (sqlite only!)", important=True)
-    if raise_anyway:
-        error(e)
+	log("Database operation failed: %s"%(e,), important=True)
+	session = session or seshman.get()
+	raise_anyway = True
+	stre = str(e)
+	if flag in stre:
+		target = stre.split(flag)[1].split(None, 1)[0]
+		log("Missing column: %s"%(target,), important=True)
+		if dcfg.alter:
+			if "." in target:
+				tmod, tcol = target.split(".")
+			else:
+				tcol = target
+				tmod = polytype
+			if dcfg.alter == "auto" or confirm("Add missing column '%s' to table '%s' (sqlite-only!)"%(tcol, tmod), True):
+				log("rolling back session")
+				session.rollback()
+				raise_anyway = False
+				add_column(tmod, tcol)
+		else:
+			log("To auto-update columns, add 'DB_ALTER = True' to your ct.cfg (sqlite only!)", important=True)
+	if raise_anyway:
+		error(e)
 
 def threadname():
 	return threading.currentThread().getName()
@@ -57,8 +82,7 @@ class Basic(object): # move elsewhere?
 		return "%s(%s)"%(self.__class__.__name__, self.id)
 
 	def log(self, *msg):
-		if "db" in confyg.log.allow:
-			log("[db] session | %s :: %s"%(self.sig(), " ".join(msg)))
+		slog(self.sig(), "::", *msg)
 
 class Session(Basic):
 	def __init__(self, database):
