@@ -34,7 +34,8 @@ class CTMeta(DeclarativeMeta):
                     schema[key] = val._ct_type
                     if val._ct_type.startswith("key"):
                         schema["_kinds"][key] = val._kinds
-                    val._indexed and indexer.index(lname, key)
+                    if getattr(val, "_indexed", None):
+                        indexer.index(lname, key)
                 if getattr(val, "choices", None):
                     attrs["%s_validator"%(key,)] = sqlalchemy.orm.validates(key)(choice_validator(val.choices))
         modelsubs[lname] = super(CTMeta, cls).__new__(cls, name, bases, attrs)
