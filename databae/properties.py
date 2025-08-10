@@ -25,6 +25,8 @@ def basicType(colClass, baseType=DynamicType):
 
 def _col(colClass, *args, **kwargs):
 	cargs = {}
+	indexed = "indexed" in kwargs
+	indexed and kwargs.pop("indexed")
 	if "primary_key" in kwargs:
 		cargs["primary_key"] = kwargs.pop("primary_key")
 	default = kwargs.pop("default", None)
@@ -38,6 +40,7 @@ def _col(colClass, *args, **kwargs):
 		return col
 	typeInstance = colClass(**kwargs)
 	col = sqlalchemy.Column(typeInstance, *args, **cargs)
+	col._indexed = indexed
 	if hasattr(typeInstance, "choices"):
 		col.choices = typeInstance.choices
 	if colClass is DateTimeAutoStamper:

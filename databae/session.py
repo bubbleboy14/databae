@@ -23,6 +23,21 @@ def conn_ex(cmd, fetch=False):
 	if fetch:
 		return rows
 
+indexes = {}
+
+def get_indexes(tname):
+	if tname in indexes:
+		return indexes[tname]
+	iz = conn_ex("pragma index_list('%s')"%(tname,), True)
+	indexes[tname] = [i[1] for i in iz]
+	return indexes[tname]
+
+def index(tname, cname):
+	iname = "idx_%s_%s"%(tname, cname)
+	if iname not in get_indexes(tname):
+		conn_ex("create index %s on %s(%s)"%(iname, tname, cname))
+		indexes[tname].append(iname)
+
 prags = {
 	"fast": { # sqlite
 		"journal_mode": "WAL",
