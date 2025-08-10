@@ -3,7 +3,7 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import create_engine, MetaData, text, event
-from fyg.util import log, error, confirm
+from fyg.util import log, error, confirm, Loggy
 from fyg import config as confyg
 from .config import config as dcfg
 
@@ -23,20 +23,32 @@ def conn_ex(cmd, fetch=False):
 	if fetch:
 		return rows
 
-indexes = {}
+class Indexer(Loggy):
+	def __init__(self):
+		self.indexes = {}
+		self.pending = []
 
-def get_indexes(tname):
-	if tname in indexes:
-		return indexes[tname]
-	iz = conn_ex("pragma index_list('%s')"%(tname,), True)
-	indexes[tname] = [i[1] for i in iz]
-	return indexes[tname]
+	def get(self, tname):
+		if tname in self.indexes:
+			return self.indexes[tname]
+		iz = conn_ex("pragma index_list('%s')"%(tname,), True)
+		self.indexes[tname] = [i[1] for i in iz]
+		return self.indexes[tname]
 
-def index(tname, cname):
-	iname = "idx_%s_%s"%(tname, cname)
-	if iname not in get_indexes(tname):
-		conn_ex("create index %s on %s(%s)"%(iname, tname, cname))
-		indexes[tname].append(iname)
+	def index(self, tname, cname):
+		iname = "idx_%s_%s"%(tname, cname)
+		if iname not in self.get(tname):
+			self.pending.append((iname, tname, cname))
+
+	def flush(self):
+		if not self.pending: return
+		self.log("flush", len(self.pending), "indexes")
+		for iname, tname, cname in self.pending:
+			conn_ex("create index %s on %s(%s)"%(iname, tname, cname))
+			self.indexes[tname].append(iname)
+		self.pending = []
+
+indexer = Indexer()
 
 prags = {
 	"fast": { # sqlite
@@ -160,6 +172,7 @@ class DataBase(Basic):
 		if not self._ready:
 			self._ready = True
 			metadata.create_all(self.engine)
+			indexer.flush()
 
 	def session(self):
 		thread = threadname()

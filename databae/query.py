@@ -5,7 +5,7 @@ from six import string_types
 from .properties import *
 from .getters import *
 from .setters import *
-from .session import session, seshman, testSession, metadata, Session, handle_error, set_scoper, index
+from .session import session, seshman, testSession, metadata, Session, handle_error, set_scoper, indexer
 
 _passthru = ["count", "all"]
 _qmod = ["filter", "limit", "offset", "join"]
