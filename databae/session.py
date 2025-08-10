@@ -1,9 +1,8 @@
 import threading
-from sqlalchemy import text
 from sqlalchemy.pool import NullPool
 from sqlalchemy.engine import Engine
-from sqlalchemy import create_engine, MetaData, event
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy import create_engine, MetaData, text, event
 from fyg.util import log, error, confirm
 from fyg import config as confyg
 from .config import config as dcfg
@@ -15,10 +14,14 @@ def slog(*msg):
 	if "db" in confyg.log.allow:
 		log("[db] session | %s"%(" ".join([str(m) for m in msg]),))
 
-def conn_ex(cmd):
+def conn_ex(cmd, fetch=False):
 	log("issuing command: %s"%(cmd,), important=True)
 	with session.engine.connect() as conn:
-		conn.execute(text(cmd))
+		result = conn.execute(text(cmd))
+		if fetch:
+			rows = result.fetchall()
+	if fetch:
+		return rows
 
 prags = {
 	"fast": { # sqlite
