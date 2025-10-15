@@ -1,4 +1,5 @@
 from sqlalchemy import orm
+from sqlalchemy.schema import CreateTable
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from fyg.util import log, error
 from six import with_metaclass
@@ -14,6 +15,14 @@ def choice_validator(choices):
 class CTMeta(DeclarativeMeta):
     def query(cls, *args, **kwargs):
         return Query(cls, *args, **kwargs)
+
+    def creationSQL(cls, recursive=False):
+        csql = str(CreateTable(cls.__table__).compile(seshman.get().engine))
+        if not recursive:
+            return csql
+        psgen = getattr(cls.__base__, "creationSQL", None)
+        base = psgen(True) if psgen else []
+        return base + [csql]
 
     def __new__(cls, name, bases, attrs):
         lname = name.lower()
