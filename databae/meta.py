@@ -9,7 +9,7 @@ def choice_validator(choices):
         return v
     return cval
 
-class CTMeta(DeclarativeMeta):
+class BasicMeta(DeclarativeMeta):
     def query(cls, *args, **kwargs):
         return Query(cls, *args, **kwargs)
 
@@ -21,6 +21,7 @@ class CTMeta(DeclarativeMeta):
         base = psgen(True) if psgen else []
         return base + [csql]
 
+class PolyMeta(BasicMeta):
     def __new__(cls, name, bases, attrs):
         lname = name.lower()
         attrs["__tablename__"] = lname
@@ -44,7 +45,7 @@ class CTMeta(DeclarativeMeta):
                         indexer.index(lname, key)
                 if getattr(val, "choices", None):
                     attrs["%s_validator"%(key,)] = sqlalchemy.orm.validates(key)(choice_validator(val.choices))
-        modelsubs[lname] = super(CTMeta, cls).__new__(cls, name, bases, attrs)
+        modelsubs[lname] = super(PolyMeta, cls).__new__(cls, name, bases, attrs)
         modelsubs[lname].__name__ = lname
         return modelsubs[lname]
 

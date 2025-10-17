@@ -3,7 +3,7 @@ from fyg.util import log, error
 from six import with_metaclass
 from .meta import *
 
-class ModelBase(with_metaclass(CTMeta, sa_dbase)):
+class ModelBase(with_metaclass(PolyMeta, sa_dbase)):
     index = Integer(primary_key=True)
     polytype = String()
     key = CompositeKey()
