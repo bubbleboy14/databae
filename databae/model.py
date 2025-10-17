@@ -142,6 +142,13 @@ class ModelCore(DeclarativeBase):
     def export(self):
         return self._basic(ModelCore.mydata(self, True))
 
+class FlatBase(with_metaclass(FlatMeta, ModelCore)):
+    __abstract__ = True
+
+    @property
+    def polytype(self):
+        return self.__class__.__name__
+
 class ModelBase(with_metaclass(PolyMeta, ModelCore)):
     index = Integer(primary_key=True)
     polytype = String()
