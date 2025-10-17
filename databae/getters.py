@@ -101,12 +101,18 @@ def key2data(b64compkey):
         b64compkey = b64compkey.urlsafe()
     return json.loads(b64d(b64compkey))
 
-def get(b64compkey, session=None):
-    try:
-        compkey = key2data(b64compkey)
-    except:
-        from fyg.util import error
-        error("bad key: %s"%(b64compkey,))
+def get(b64compkey, session=None, model=None):
+    if model:
+        compkey = {
+            "model": model,
+            "index": b64compkey
+        }
+    else:
+        try:
+            compkey = key2data(b64compkey)
+        except:
+            from fyg.util import error
+            error("bad key: %s"%(b64compkey,))
     return modelsubs[compkey["model"]].query(session=session).query.get(compkey["index"])
 
 def get_multi(b64keys, session=None):
