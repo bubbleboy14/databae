@@ -109,7 +109,7 @@ class ModelCore(DeclarativeBase):
                 continue
             if not key.startswith("_"):
                 val = getattr(self, key)
-                if prop.startswith("key"):
+                if "key" in prop:
                     if type(val) is list:
                         val = [v.urlsafe() for v in val]
                     elif hasattr(val, "urlsafe"):

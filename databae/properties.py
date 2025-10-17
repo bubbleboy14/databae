@@ -51,6 +51,8 @@ def _col(colClass, *args, **kwargs):
 		col._ct_type = "string"
 	elif colClass is Key:
 		col._kinds = typeInstance.kinds
+	elif colClass is IndexKey:
+		col._kind = typeInstance.kind
 	elif colClass is JSONType:
 		col._ct_type = "json"
 	if not hasattr(col, "_ct_type"):
@@ -280,7 +282,7 @@ class IndexKey(BasicInt):
 		BasicInt.__init__(self, *args, **kwargs)
 
 	def process_bind_param(self, value, dialect):
-		return value.urlsafe() if hasattr(value, "urlsafe") else value
+		return value
 
 	def process_result_value(self, value, dialect):
 		return KeyWrapper(value, self.kind)
