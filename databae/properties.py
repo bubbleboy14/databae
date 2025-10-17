@@ -13,8 +13,8 @@ class DynamicType(sqlalchemy.TypeDecorator):
 
 class StringType(DynamicType):
 	def __init__(self, *args, **kwargs):
-		# '500' (len) required for MySQL VARCHAR
-		DynamicType.__init__(self, 500, *args, **kwargs)
+		# len required for MySQL VARCHAR
+		DynamicType.__init__(self, kwargs.pop("length", config.stringsize), *args, **kwargs)
 
 def basicType(colClass, baseType=DynamicType):
 	cname = colClass.__name__

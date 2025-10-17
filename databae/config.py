@@ -10,6 +10,7 @@ config = Config({
 	"blob": "blob",
 	"alter": False, # add new columns to tables - sqlite only!
 	"echo": False,
+	"stringsize": 500,
 	"pool": {
 		"null": True,
 		"size": 10,
