@@ -220,8 +220,9 @@ class ArrayType(BasicString):
 		return vlist
 
 class KeyWrapper(object):
-	def __init__(self, urlsafe=None):
+	def __init__(self, urlsafe=None, model=None):
 		self.value = urlsafe
+		self.model = model
 
 	def __nonzero__(self): # py2
 		return bool(self.value)
@@ -236,10 +237,10 @@ class KeyWrapper(object):
 		return not hasattr(other, "value") or self.value != other.value
 
 	def __hash__(self):
-		return sum([ord(c) for c in self.value])
+		return self.value if type(self.value) is int else sum([ord(c) for c in self.value])
 
 	def get(self, session=None):
-		return get(self.value, session)
+		return get(self.value, session, self.model)
 
 	def delete(self):
 		ent = self.get()
@@ -269,9 +270,34 @@ class Key(BasicString):
 	def process_result_value(self, value, dialect):
 		return KeyWrapper(value)
 
+class IndexKey(BasicInt):
+	cache_ok = config.cache
+
+	def __init__(self, *args, **kwargs):
+		self.kind = kwargs.pop("kind")
+		if not isinstance(self.kind, str):
+			self.kind = self.kind.__name__.lower()
+		BasicInt.__init__(self, *args, **kwargs)
+
+	def process_bind_param(self, value, dialect):
+		return value.urlsafe() if hasattr(value, "urlsafe") else value
+
+	def process_result_value(self, value, dialect):
+		return KeyWrapper(value, self.kind)
+
 CompositeKey = sqlColumn(Key)
-ForeignKey = sqlColumn(Key)
+FlexForeignKey = sqlColumn(Key)
+IndexForeignKey = sqlColumn(IndexKey)
+
+def fkprop(targetClass):
+	tname = targetClass if type(targetClass) is str else targetClass.__tablename__
+	return sqlalchemy.ForeignKey("%s.index"%(tname,))
 
 def sqlForeignKey(targetClass, **kwargs):
-	return sqlalchemy.Column(sqlInteger,
-		sqlalchemy.ForeignKey("%s.index"%(targetClass.__tablename__,)), **kwargs)
+	return sqlalchemy.Column(sqlInteger, fkprop(targetClass), **kwargs)
+
+def ForeignKey(**kwargs):
+	if config.indexkeys: # single-kind, non-repeating!
+		return IndexForeignKey(fkprop(kwargs.get("kind")), **kwargs)
+	else:
+		return FlexForeignKey(**kwargs)
