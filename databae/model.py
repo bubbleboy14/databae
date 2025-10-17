@@ -1,73 +1,16 @@
 from sqlalchemy import orm
-from sqlalchemy.schema import CreateTable
-from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from fyg.util import log, error
 from six import with_metaclass
-from .query import *
+from .meta import *
 
-def choice_validator(choices):
-    def cval(s, k, v):
-        if v not in choices:
-            error("can't set %s! %s not in %s"%(k, v, choices))
-        return v
-    return cval
-
-class CTMeta(DeclarativeMeta):
-    def query(cls, *args, **kwargs):
-        return Query(cls, *args, **kwargs)
-
-    def creationSQL(cls, recursive=False):
-        csql = str(CreateTable(cls.__table__).compile(seshman.get().engine))
-        if not recursive:
-            return csql
-        psgen = getattr(cls.__base__, "creationSQL", None)
-        base = psgen(True) if psgen else []
-        return base + [csql]
-
-    def __new__(cls, name, bases, attrs):
-        lname = name.lower()
-        attrs["__tablename__"] = lname
-        if lname != "modelbase":
-            attrs["__mapper_args__"] = {
-                "polymorphic_identity": lname
-            }
-            attrs["index"] = sqlForeignKey(bases[0], primary_key=True)
-            if "label" not in attrs:
-                for label in ["name", "title", "topic"]:
-                    if label in attrs:
-                        attrs["label"] = label
-                        break
-            schema = attrs["_schema"] = merge_schemas(bases, attrs.get("label"))
-            for key, val in list(attrs.items()):
-                if getattr(val, "_ct_type", None):
-                    schema[key] = val._ct_type
-                    if val._ct_type.startswith("key"):
-                        schema["_kinds"][key] = val._kinds
-                    if getattr(val, "_indexed", None):
-                        indexer.index(lname, key)
-                if getattr(val, "choices", None):
-                    attrs["%s_validator"%(key,)] = sqlalchemy.orm.validates(key)(choice_validator(val.choices))
-        modelsubs[lname] = super(CTMeta, cls).__new__(cls, name, bases, attrs)
-        modelsubs[lname].__name__ = lname
-        return modelsubs[lname]
-
-sa_dbase = declarative_base(metadata=metadata)
-
-class ModelBase(with_metaclass(CTMeta, sa_dbase)):
-    index = Integer(primary_key=True)
-    polytype = String()
-    key = CompositeKey()
-    __mapper_args__ = {
-        "polymorphic_on": polytype,
-        "polymorphic_identity": "modelbase",
-        "with_polymorphic": "*"
-    }
+class ModelCore(DeclarativeBase):
+    __abstract__ = True
     label = "key"
     _data_omit = []
     _unique_cols = []
 
     def __init__(self, *args, **kwargs):
-        sa_dbase.__init__(self, *args, **kwargs)
+        DeclarativeBase.__init__(self, *args, **kwargs)
         self._defaults()
         self._init()
 
@@ -197,7 +140,24 @@ class ModelBase(with_metaclass(CTMeta, sa_dbase)):
         return self._basic(self.mydata())
 
     def export(self):
-        return self._basic(ModelBase.mydata(self, True))
+        return self._basic(ModelCore.mydata(self, True))
+
+class FlatBase(with_metaclass(FlatMeta, ModelCore)):
+    __abstract__ = True
+
+    @property
+    def polytype(self):
+        return self.__class__.__name__
+
+class ModelBase(with_metaclass(PolyMeta, ModelCore)):
+    index = Integer(primary_key=True)
+    polytype = String()
+    key = CompositeKey()
+    __mapper_args__ = {
+        "polymorphic_on": polytype,
+        "polymorphic_identity": "modelbase",
+        "with_polymorphic": "*"
+    }
 
 class TimeStampedBase(ModelBase):
     created = DateTime(auto_now_add=True)
