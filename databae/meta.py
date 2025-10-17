@@ -49,5 +49,5 @@ class PolyMeta(BasicMeta):
         modelsubs[lname].__name__ = lname
         return modelsubs[lname]
 
-sa_dbase = declarative_base(metadata=metadata)
+DeclarativeBase = declarative_base(metadata=metadata)
 

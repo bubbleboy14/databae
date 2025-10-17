@@ -3,21 +3,14 @@ from fyg.util import log, error
 from six import with_metaclass
 from .meta import *
 
-class ModelBase(with_metaclass(PolyMeta, sa_dbase)):
-    index = Integer(primary_key=True)
-    polytype = String()
-    key = CompositeKey()
-    __mapper_args__ = {
-        "polymorphic_on": polytype,
-        "polymorphic_identity": "modelbase",
-        "with_polymorphic": "*"
-    }
+class ModelCore(DeclarativeBase):
+    __abstract__ = True
     label = "key"
     _data_omit = []
     _unique_cols = []
 
     def __init__(self, *args, **kwargs):
-        sa_dbase.__init__(self, *args, **kwargs)
+        DeclarativeBase.__init__(self, *args, **kwargs)
         self._defaults()
         self._init()
 
@@ -147,7 +140,17 @@ class ModelBase(with_metaclass(PolyMeta, sa_dbase)):
         return self._basic(self.mydata())
 
     def export(self):
-        return self._basic(ModelBase.mydata(self, True))
+        return self._basic(ModelCore.mydata(self, True))
+
+class ModelBase(with_metaclass(PolyMeta, ModelCore)):
+    index = Integer(primary_key=True)
+    polytype = String()
+    key = CompositeKey()
+    __mapper_args__ = {
+        "polymorphic_on": polytype,
+        "polymorphic_identity": "modelbase",
+        "with_polymorphic": "*"
+    }
 
 class TimeStampedBase(ModelBase):
     created = DateTime(auto_now_add=True)
