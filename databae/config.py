@@ -11,6 +11,8 @@ config = Config({
 	"alter": False, # add new columns to tables - sqlite only!
 	"echo": False,
 	"stringsize": 500,
+	"flatkeysize": 80,
+	"indexkeys": False,
 	"pool": {
 		"null": True,
 		"size": 10,
