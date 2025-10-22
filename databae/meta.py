@@ -49,7 +49,7 @@ class FlatMeta(BasicMeta):
     def __new__(cls, name, bases, attrs):
         lname = name.lower()
         if lname != "flatbase":
-            attrs["index"] = Integer(primary_key=True)
+            attrs["index"] = Integer(big=True, unsigned=True, primary_key=True)
             attrs["key"] = CompositeKey(length=config.flatkeysize)
             BasicMeta._prepAttrs(cls, attrs, bases)
         return super(FlatMeta, cls).__new__(cls, name, bases, attrs)
