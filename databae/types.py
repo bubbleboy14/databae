@@ -1,8 +1,6 @@
 import sqlalchemy, json
 from .config import config
 
-primis = ["BIGINT", "Float", "Boolean", "Text", "Date", "Time"]
-
 class DynamicType(sqlalchemy.TypeDecorator):
 	cache_ok = config.cache
 
