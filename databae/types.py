@@ -27,7 +27,6 @@ BasicString = basicType(sqlalchemy.VARCHAR, StringType)
 BasicText = basicType(sqlalchemy.UnicodeText)
 BasicInt = basicType(sqlalchemy.Integer)
 
-
 class DateTimeAutoStamper(BasicDT):
 	cache_ok = config.cache
 
@@ -45,4 +44,3 @@ class JSONType(BasicText):
 
 	def process_result_value(self, value, dialect):
 		return json.loads(value or "{}")
-
