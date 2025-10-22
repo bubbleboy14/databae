@@ -1,5 +1,6 @@
 import json
 from .types import BasicString, BasicText, BasicInt
+from .getters import get
 from .config import config
 
 class ArrayType(BasicText):
