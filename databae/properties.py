@@ -1,5 +1,6 @@
 import sqlalchemy
-from .types import primis, DynamicType, StringType, basicType
+from sqlalchemy.dialects import mysql as mysqldialect
+from .types import DynamicType, StringType, basicType
 from .types import BasicDT, BasicString, BasicText, BasicInt, DateTimeAutoStamper, JSONType
 from .keys import ArrayType, KeyWrapper, Key, IndexKey
 from .blob import BlobWrapper, Blob
@@ -8,8 +9,8 @@ from .config import config
 
 def _col(colClass, *args, **kwargs):
 	cargs = {}
-	indexed = "indexed" in kwargs
-	indexed and kwargs.pop("indexed")
+	indexed = kwargs.pop("indexed", False)
+	unsigned = kwargs.pop("unsigned", False)
 	if "primary_key" in kwargs:
 		cargs["primary_key"] = kwargs.pop("primary_key")
 	default = kwargs.pop("default", None)
@@ -22,6 +23,9 @@ def _col(colClass, *args, **kwargs):
 			col._kinds = typeInstance.kinds
 		return col
 	typeInstance = colClass(**kwargs)
+	if unsigned:
+		variant = getattr(mysqldialect, colClass.__name__)
+		typeInstance.with_variant(variant(unsigned=True), "mysql")
 	col = sqlalchemy.Column(typeInstance, *args, **cargs)
 	col._indexed = indexed
 	if hasattr(typeInstance, "choices"):
@@ -46,13 +50,16 @@ def _col(colClass, *args, **kwargs):
 def sqlColumn(colClass):
 	return lambda *args, **kwargs : _col(colClass, *args, **kwargs)
 
+primis = ["BIGINT", "Float", "Boolean", "Text", "Date", "Time"]
+
 for prop in primis:
 	sqlprop = getattr(sqlalchemy, prop)
 	globals()["sql%s"%(prop,)] = sqlprop
 	globals()[prop] = sqlColumn(basicType(sqlprop))
 
-DateTime = sqlColumn(DateTimeAutoStamper)
+Int = sqlColumn(BasicInt)
 String = sqlColumn(BasicString)
+DateTime = sqlColumn(DateTimeAutoStamper)
 JSON = sqlColumn(JSONType)
 Binary = sqlColumn(Blob)
 CompositeKey = sqlColumn(Key)
@@ -64,10 +71,16 @@ def fkprop(targetClass):
 	return sqlalchemy.ForeignKey("%s.index"%(tname,))
 
 def sqlForeignKey(targetClass, **kwargs):
-	return sqlalchemy.Column(sqlInteger, fkprop(targetClass), **kwargs)
+	return sqlalchemy.Column(sqlalchemy.Integer, fkprop(targetClass), **kwargs)
 
 def ForeignKey(**kwargs):
 	if config.indexkeys: # single-kind, non-repeating!
 		return IndexForeignKey(fkprop(kwargs.get("kind")), **kwargs)
 	else:
 		return FlexForeignKey(**kwargs)
+
+def Integer(**kwargs):
+	if kwargs.pop("big", False):
+		return BIGINT(**kwargs)
+	else:
+		return Int(**kwargs)
