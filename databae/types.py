@@ -1,7 +1,7 @@
 import sqlalchemy, json
 from .config import config
 
-primis = ["Integer", "Float", "Boolean", "Text", "Date", "Time"]
+primis = ["BIGINT", "Float", "Boolean", "Text", "Date", "Time"]
 
 class DynamicType(sqlalchemy.TypeDecorator):
 	cache_ok = config.cache
@@ -17,9 +17,9 @@ class StringType(DynamicType):
 
 def basicType(colClass, baseType=DynamicType):
 	cname = colClass.__name__
-	attrs = { "impl": colClass }
-	if config.cache and cname in primis:
-		attrs["cache_ok"] = True
+	attrs = { "impl": colClass, "cache_ok": config.cache }
+#	if config.cache and cname in primis:
+#		attrs["cache_ok"] = True
 	return type("%s"%(cname,), (baseType,), attrs)
 
 BasicDT = basicType(sqlalchemy.DateTime)
