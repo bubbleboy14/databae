@@ -24,6 +24,7 @@ BasicDT = basicType(sqlalchemy.DateTime)
 BasicString = basicType(sqlalchemy.VARCHAR, StringType)
 BasicText = basicType(sqlalchemy.UnicodeText)
 BasicInt = basicType(sqlalchemy.Integer)
+BasicBig = basicType(sqlalchemy.BIGINT)
 
 class DateTimeAutoStamper(BasicDT):
 	cache_ok = config.cache

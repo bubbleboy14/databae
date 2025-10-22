@@ -1,4 +1,3 @@
-import sqlalchemy
 from .columns import *
 from .config import config
 
@@ -11,12 +10,12 @@ def sqlForeignKey(targetClass, **kwargs):
 
 def ForeignKey(**kwargs):
 	if config.indexkeys: # single-kind, non-repeating!
-		return IndexForeignKey(fkprop(kwargs.get("kind")), **kwargs)
+		return IndexForeignKey(fkprop(kwargs.get("kind")), unsigned=True, **kwargs)
 	else:
 		return FlexForeignKey(**kwargs)
 
 def Integer(**kwargs):
 	if kwargs.pop("big", False):
-		return BIGINT(**kwargs)
+		return Big(**kwargs)
 	else:
 		return Int(**kwargs)

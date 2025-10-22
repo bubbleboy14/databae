@@ -1,5 +1,5 @@
 import json
-from .types import BasicString, BasicText, BasicInt
+from .types import BasicString, BasicText, BasicBig
 from .getters import get
 from .config import config
 
@@ -83,14 +83,14 @@ class Key(BasicString):
 	def process_result_value(self, value, dialect):
 		return KeyWrapper(value)
 
-class IndexKey(BasicInt):
+class IndexKey(BasicBig):
 	cache_ok = config.cache
 
 	def __init__(self, *args, **kwargs):
 		self.kind = kwargs.pop("kind")
 		if not isinstance(self.kind, str):
 			self.kind = self.kind.__name__.lower()
-		BasicInt.__init__(self, *args, **kwargs)
+		BasicBig.__init__(self, *args, **kwargs)
 
 	def process_bind_param(self, value, dialect):
 		return value

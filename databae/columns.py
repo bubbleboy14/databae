@@ -1,7 +1,7 @@
 import sqlalchemy
 from sqlalchemy.dialects import mysql as mysqldialect
-from .types import DynamicType, StringType, basicType
-from .types import BasicDT, BasicString, BasicText, BasicInt, DateTimeAutoStamper, JSONType
+from .types import DynamicType, StringType, DateTimeAutoStamper, JSONType
+from .types import basicType, BasicDT, BasicString, BasicText, BasicInt, BasicBig
 from .keys import ArrayType, KeyWrapper, Key, IndexKey
 from .blob import BlobWrapper, Blob
 
@@ -22,7 +22,7 @@ def _col(colClass, *args, **kwargs):
 		return col
 	typeInstance = colClass(**kwargs)
 	if unsigned:
-		variant = getattr(mysqldialect, colClass.__name__)
+		variant = getattr(mysqldialect, colClass.impl.__name__)
 		typeInstance.with_variant(variant(unsigned=True), "mysql")
 	col = sqlalchemy.Column(typeInstance, *args, **cargs)
 	col._indexed = indexed
@@ -48,7 +48,7 @@ def _col(colClass, *args, **kwargs):
 def sqlColumn(colClass):
 	return lambda *args, **kwargs : _col(colClass, *args, **kwargs)
 
-primis = ["BIGINT", "Float", "Boolean", "Text", "Date", "Time"]
+primis = ["Float", "Boolean", "Text", "Date", "Time"]
 
 for prop in primis:
 	sqlprop = getattr(sqlalchemy, prop)
@@ -56,6 +56,7 @@ for prop in primis:
 	globals()[prop] = sqlColumn(basicType(sqlprop))
 
 Int = sqlColumn(BasicInt)
+Big = sqlColumn(BasicBig)
 String = sqlColumn(BasicString)
 DateTime = sqlColumn(DateTimeAutoStamper)
 JSON = sqlColumn(JSONType)
