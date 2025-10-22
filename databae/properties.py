@@ -84,17 +84,15 @@ class DateTimeAutoStamper(BasicDT):
 DateTime = sqlColumn(DateTimeAutoStamper)
 
 # strings, arrays, keys
-class BasicString(basicType(sqlalchemy.UnicodeText, StringType)):
+class BasicString(basicType(sqlalchemy.VARCHAR, StringType)):
 	cache_ok = config.cache
 
-	def process_bind_param(self, data, dialect):
-#		if data and type(data) is not str:
-#			data = data.decode('utf-8')
-		return data
+class BasicText(basicType(sqlalchemy.UnicodeText)):
+	cache_ok = config.cache
 
 String = sqlColumn(BasicString)
 
-class JSONType(BasicString):
+class JSONType(BasicText):
 	def process_bind_param(self, value, dialect):
 		return json.dumps(value)
 
@@ -192,7 +190,7 @@ class Binary(basicType(sqlString)):
 		return sqlalchemy.func.UNHEX(value)
 """
 
-class ArrayType(BasicString):
+class ArrayType(BasicText):
 	cache_ok = config.cache
 
 	def __init__(self, *args, **kwargs):
@@ -202,7 +200,7 @@ class ArrayType(BasicString):
 			for i in range(len(self.kinds)):
 				if not isinstance(self.kinds[i], str):
 					self.kinds[i] = self.kinds[i].__name__.lower()
-		BasicString.__init__(self, *args, **kwargs)
+		BasicText.__init__(self, *args, **kwargs)
 
 	def process_bind_param(self, value, dialect):
 		if self.isKey:
