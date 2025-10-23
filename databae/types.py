@@ -1,4 +1,5 @@
 import sqlalchemy, json
+from sqlalchemy.ext.compiler import compiles
 from .config import config
 
 class DynamicType(sqlalchemy.TypeDecorator):
@@ -13,6 +14,13 @@ class StringType(DynamicType):
 		# len required for MySQL VARCHAR
 		DynamicType.__init__(self, kwargs.pop("length", config.stringsize), *args, **kwargs)
 
+class BigType(DynamicType):
+	pass
+
+@compiles(BigType, 'sqlite')
+def bi_c(element, compiler, **kw):
+    return "INTEGER"
+
 def basicType(colClass, baseType=DynamicType):
 	cname = colClass.__name__
 	attrs = { "impl": colClass, "cache_ok": config.cache }
@@ -24,7 +32,7 @@ BasicDT = basicType(sqlalchemy.DateTime)
 BasicString = basicType(sqlalchemy.VARCHAR, StringType)
 BasicText = basicType(sqlalchemy.UnicodeText)
 BasicInt = basicType(sqlalchemy.Integer)
-BasicBig = basicType(sqlalchemy.BIGINT)
+BasicBig = basicType(sqlalchemy.BIGINT, BigType)
 
 class DateTimeAutoStamper(BasicDT):
 	cache_ok = config.cache
