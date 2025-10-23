@@ -1,16 +1,19 @@
+from .util import get_iname
 from .columns import *
 from .config import config
 
 def fkprop(targetClass):
 	tname = targetClass if type(targetClass) is str else targetClass.__tablename__
-	return sqlalchemy.ForeignKey("%s.index"%(tname,))
+	iname = get_iname(targetClass)
+	return sqlalchemy.ForeignKey("%s.%s"%(tname, iname))
 
 def sqlForeignKey(targetClass, **kwargs):
 	return sqlalchemy.Column(sqlalchemy.Integer, fkprop(targetClass), **kwargs)
 
 def ForeignKey(**kwargs):
-	if config.indexkeys: # single-kind, non-repeating!
-		return IndexForeignKey(fkprop(kwargs.get("kind")), unsigned=True, **kwargs)
+	kind = kwargs.get("kind")
+	if config.index.keys and kind: # single-kind, non-repeating!
+		return IndexForeignKey(fkprop(kind), unsigned=True, **kwargs)
 	else:
 		return FlexForeignKey(**kwargs)
 
