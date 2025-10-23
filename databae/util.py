@@ -2,6 +2,7 @@ import operator, base64, json, hashlib, requests
 from datetime import datetime
 from six import string_types
 from fyg.util import log
+from .config import config
 
 modbulkers = {}
 modelsubs = {}
@@ -22,6 +23,11 @@ def reg_bulker(modelName, func):
 
 def get_model(modelName):
     return modelsubs.get(modelName.lower(), None)
+
+def get_iname(mod):
+    if type(mod) is str:
+        mod = get_model(mod)
+    return getattr(mod, "indexname", "index")
 
 def get_schema(modname=None):
     if modname:
@@ -66,7 +72,9 @@ def ct_key(modelName, index):
 
 def merge_schemas(bases, label=None):
     kinds = {}
-    schema = { "index": "immutable", "key": "key_immutable" }
+    schema = { "key": "key_immutable" }
+    if not config.index.named: # TODO : set named indexes!
+        schema["index"] = "immutable"
     for base in bases:
         if hasattr(base, "_schema"):
             schema.update(base._schema)
