@@ -1,7 +1,7 @@
 from fyg.util import log, batch
 from .session import seshman
 from .edit import *
-from .util import ct_key
+from .util import ct_key, get_iname
 from .config import config
 
 def _init_entity(instance, session=None, preserve_timestamps=False):
@@ -44,7 +44,10 @@ def init_multi(instances, session=None, preserve_timestamps=False):
     session.add_all(instances + lookups)
     session.flush()
     for instance in instances:
-        instance.key = instance.key or KeyWrapper(ct_key(instance.polytype, instance.index))
+        if not instance.key:
+            iname = get_iname(instance.polytype)
+            ival = getattr(instance, iname)
+            instance.key = KeyWrapper(ct_key(instance.polytype, ival))
 
 def put_multi(instances, session=None, preserve_timestamps=False):
     session = session or seshman.get()
