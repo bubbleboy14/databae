@@ -14,7 +14,7 @@ def _init_entity(instance, session=None, preserve_timestamps=False):
         if hasattr(instance, "_pre_put"):
             instance._pre_put()
         for key, val in list(cls.__dict__.items()):
-            if not preserve_timestamps and getattr(val, "is_dt_autostamper", False) and val.should_stamp(not instance.index):
+            if not preserve_timestamps and getattr(val, "is_dt_autostamper", False) and val.should_stamp(not instance._has_complete_key()):
                 setattr(instance, key, now)
             if config.refcount and key in instance._orig_fkeys:
                 oval = instance._orig_fkeys[key]
