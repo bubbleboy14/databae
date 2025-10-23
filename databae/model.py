@@ -130,7 +130,8 @@ class ModelCore(DeclarativeBase):
 
     def _basic(self, d):
         d["key"] = self.id()
-        d["index"] = self.index
+        iname = getattr(self, "indexname", "index")
+        d[iname] = getattr(self, iname)
         d["modelName"] = self.polytype
         d["_label"] = self.label
         d["label"] = self.labeler()
