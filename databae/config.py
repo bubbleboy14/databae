@@ -13,7 +13,7 @@ config = Config({
 	"stringsize": 500,
 	"flatkeysize": 80,
 	"index": {
-		"keys": False,
+		"key": False,
 		"named": False
 	},
 	"pool": {
