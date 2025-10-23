@@ -12,7 +12,10 @@ config = Config({
 	"echo": False,
 	"stringsize": 500,
 	"flatkeysize": 80,
-	"indexkeys": False,
+	"index": {
+		"keys": False,
+		"named": False
+	},
 	"pool": {
 		"null": True,
 		"size": 10,
