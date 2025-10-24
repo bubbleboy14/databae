@@ -97,7 +97,7 @@ class ModelCore(DeclarativeBase):
         return self.__tablename__
 
     def id(self):
-        return self.key.urlsafe()
+        return self.key.urlsafe() if hasattr(self.key, "urlsafe") else self.key
 
     def _has_complete_key(self):
         return bool(self.id())
