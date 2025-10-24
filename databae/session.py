@@ -84,6 +84,8 @@ def add_column(mod, col): # sqlite only
 
 def handle_error(e, session=None, polytype=None, flag=" no such column: "):
 	log("Database operation failed: %s"%(e,), important=True)
+	import traceback
+	traceback.print_exc()
 	session = session or seshman.get()
 	raise_anyway = True
 	stre = str(e)
