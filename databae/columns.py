@@ -2,9 +2,10 @@ import sqlalchemy
 from sqlalchemy.dialects import mysql as mysqldialect
 from .types import DynamicType, StringType, DateTimeAutoStamper
 from .types import basicType, BasicDT, BasicString, BasicText, BasicInt, BasicBig
+from .composites import JSONText, JSONString, ArrayType
 from .keys import KeyWrapper, Key, IndexKey
-from .composites import JSONType, ArrayType
 from .blob import BlobWrapper, Blob
+from .config import config
 
 def _col(colClass, *args, **kwargs):
 	cargs = {}
@@ -39,7 +40,7 @@ def _col(colClass, *args, **kwargs):
 		col._kinds = typeInstance.kinds
 	elif colClass is IndexKey:
 		col._kind = typeInstance.kind
-	elif colClass is JSONType:
+	elif colClass in [JSONText, JSONString]:
 		col._ct_type = "json"
 	if not hasattr(col, "_ct_type"):
 		col._ct_type = colClass.__name__.lower()
@@ -48,6 +49,10 @@ def _col(colClass, *args, **kwargs):
 
 def sqlColumn(colClass):
 	return lambda *args, **kwargs : _col(colClass, *args, **kwargs)
+
+def sqlVariableColumn(col, altcol, altflag):
+	c = lambda : altcol if config[altflag] else col
+	return lambda *args, **kwargs : _col(c(), *args, **kwargs)
 
 primis = ["Float", "Boolean", "Text", "Date", "Time"]
 
@@ -60,7 +65,7 @@ Int = sqlColumn(BasicInt)
 Big = sqlColumn(BasicBig)
 String = sqlColumn(BasicString)
 DateTime = sqlColumn(DateTimeAutoStamper)
-JSON = sqlColumn(JSONType)
+JSON = sqlVariableColumn(JSONText, JSONString, "notext")
 Binary = sqlColumn(Blob)
 CompositeKey = sqlColumn(Key)
 FlexForeignKey = sqlColumn(Key)
