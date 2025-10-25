@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='databae',
-    version="0.1.4.11",
+    version="0.1.4.12",
     author='Mario Balibrera',
     author_email='mario.balibrera@gmail.com',
     license='MIT License',
