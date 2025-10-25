@@ -1,8 +1,9 @@
 import sqlalchemy
 from sqlalchemy.dialects import mysql as mysqldialect
-from .types import DynamicType, StringType, DateTimeAutoStamper, JSONType
+from .types import DynamicType, StringType, DateTimeAutoStamper
 from .types import basicType, BasicDT, BasicString, BasicText, BasicInt, BasicBig
-from .keys import ArrayType, KeyWrapper, Key, IndexKey
+from .keys import KeyWrapper, Key, IndexKey
+from .composites import JSONType, ArrayType
 from .blob import BlobWrapper, Blob
 
 def _col(colClass, *args, **kwargs):

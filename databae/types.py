@@ -1,4 +1,4 @@
-import sqlalchemy, json
+import sqlalchemy
 from sqlalchemy.ext.compiler import compiles
 from .config import config
 
@@ -44,10 +44,3 @@ class DateTimeAutoStamper(BasicDT):
 
 	def should_stamp(self, is_new):
 		return self.auto_now or is_new and self.auto_now_add
-
-class JSONType(BasicText):
-	def process_bind_param(self, value, dialect):
-		return json.dumps(value)
-
-	def process_result_value(self, value, dialect):
-		return json.loads(value or "{}")
