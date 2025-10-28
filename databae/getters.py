@@ -63,8 +63,10 @@ def _join(modelName, altname, joinz, query):
             break
     query.join(get_model(altname), mod1.key == mod2attr)
 
-def get_page(modelName, limit, offset, order='index', filters={}, session=None, count=False, exporter="export"):
-    query = get_model(modelName).query(session=session)
+def get_page(modelName, limit, offset, order=None, filters={}, session=None, count=False, exporter="export"):
+    model = get_model(modelName)
+    order = order or getattr(model, "indexname", "index")
+    query = model.query(session=session)
     joinz = set()
     for key, obj in list(filters.items()):
         _apply_filter(query, key, obj, modelName, joinz)
