@@ -123,15 +123,26 @@ class ModelCore(DeclarativeBase):
                 cols[key] = val
         return cols
 
+    @property
+    def iname(self):
+        return getattr(self, "indexname", "index")
+
+    @property
+    def ival(self):
+        return getattr(self, self.iname)
+
+    @property
+    def ilabel(self):
+        return "%s %s"%(self.polytype, self.ival)
+
     def labeler(self):
         if self.label == "key":
             return self.id()
-        return getattr(self, self.label) or "%s %s"%(self.polytype, self.index)
+        return getattr(self, self.label) or self.ilabel
 
     def _basic(self, d):
         d["key"] = self.id()
-        iname = getattr(self, "indexname", "index")
-        d[iname] = getattr(self, iname)
+        d[self.iname] = self.ival
         d["modelName"] = self.polytype
         d["_label"] = self.label
         d["label"] = self.labeler()
