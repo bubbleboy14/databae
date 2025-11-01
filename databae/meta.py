@@ -21,7 +21,7 @@ class BasicMeta(DeclarativeMeta):
         base = psgen(True) if psgen else []
         return base + [csql]
 
-    def _prepAttrs(cls, attrs, bases):
+    def _prepAttrs(cls, lname, attrs, bases):
         if "label" not in attrs:
             for label in ["name", "title", "topic"]:
                 if label in attrs:
@@ -52,7 +52,7 @@ class FlatMeta(BasicMeta):
             iname = attrs["indexname"] = "%s_id"%(lname,) if config.index.named else "index"
             attrs[iname] = Integer(big=True, unsigned=True, primary_key=True)
             attrs["key"] = CompositeKey(length=config.flatkeysize)
-            BasicMeta._prepAttrs(cls, attrs, bases)
+            BasicMeta._prepAttrs(cls, lname, attrs, bases)
         return super(FlatMeta, cls).__new__(cls, name, bases, attrs)
 
 class PolyMeta(BasicMeta):
@@ -63,7 +63,7 @@ class PolyMeta(BasicMeta):
                 "polymorphic_identity": lname
             }
             attrs["index"] = sqlForeignKey(bases[0], primary_key=True)
-            BasicMeta._prepAttrs(cls, attrs, bases)
+            BasicMeta._prepAttrs(cls, lname, attrs, bases)
         return super(PolyMeta, cls).__new__(cls, name, bases, attrs)
 
 DeclarativeBase = declarative_base(metadata=metadata)
