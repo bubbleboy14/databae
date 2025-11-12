@@ -29,7 +29,8 @@ class ModelCore(DeclarativeBase):
                 else:
                     val = KeyWrapper()
                 setattr(self, prop, val)
-        self.key = KeyWrapper()
+        if config.flatkeysize:
+            self.key = KeyWrapper()
         for key, val in list(self.__class__.__dict__.items()):
             if getattr(self, key, None) is None and getattr(val, "_default", None) is not None:
                 setattr(self, key, val._default)
