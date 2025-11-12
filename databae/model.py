@@ -98,6 +98,8 @@ class ModelCore(DeclarativeBase):
         return self.__tablename__
 
     def id(self):
+        if not config.flatkeysize:
+            return self.ival
         return self.key.urlsafe() if hasattr(self.key, "urlsafe") else self.key
 
     def _has_complete_key(self):
@@ -158,6 +160,7 @@ class ModelCore(DeclarativeBase):
 
 class FlatBase(with_metaclass(FlatMeta, ModelCore)):
     __abstract__ = True
+    label = "ival"
 
     @property
     def polytype(self):
