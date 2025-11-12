@@ -29,7 +29,8 @@ class ModelCore(DeclarativeBase):
                 else:
                     val = KeyWrapper()
                 setattr(self, prop, val)
-        self.key = KeyWrapper()
+        if config.flatkeysize:
+            self.key = KeyWrapper()
         for key, val in list(self.__class__.__dict__.items()):
             if getattr(self, key, None) is None and getattr(val, "_default", None) is not None:
                 setattr(self, key, val._default)
@@ -97,6 +98,8 @@ class ModelCore(DeclarativeBase):
         return self.__tablename__
 
     def id(self):
+        if not config.flatkeysize:
+            return self.ival
         return self.key.urlsafe() if hasattr(self.key, "urlsafe") else self.key
 
     def _has_complete_key(self):
@@ -141,7 +144,8 @@ class ModelCore(DeclarativeBase):
         return getattr(self, self.label) or self.ilabel
 
     def _basic(self, d):
-        d["key"] = self.id()
+        if config.flatkeysize:
+            d["key"] = self.id()
         d[self.iname] = self.ival
         d["modelName"] = self.polytype
         d["_label"] = self.label
@@ -156,6 +160,7 @@ class ModelCore(DeclarativeBase):
 
 class FlatBase(with_metaclass(FlatMeta, ModelCore)):
     __abstract__ = True
+    label = "ival"
 
     @property
     def polytype(self):

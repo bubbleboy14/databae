@@ -43,11 +43,12 @@ def init_multi(instances, session=None, preserve_timestamps=False):
             lookups += _init_entity(instance, session, preserve_timestamps)
     session.add_all(instances + lookups)
     session.flush()
-    for instance in instances:
-        if not instance.key:
-            iname = get_iname(instance.polytype)
-            ival = getattr(instance, iname)
-            instance.key = KeyWrapper(ct_key(instance.polytype, ival))
+    if config.flatkeysize:
+        for instance in instances:
+            if not instance.key:
+                iname = get_iname(instance.polytype)
+                ival = getattr(instance, iname)
+                instance.key = KeyWrapper(ct_key(instance.polytype, ival))
 
 def put_multi(instances, session=None, preserve_timestamps=False):
     session = session or seshman.get()

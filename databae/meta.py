@@ -51,7 +51,8 @@ class FlatMeta(BasicMeta):
         if lname != "flatbase":
             iname = attrs["indexname"] = "%s_id"%(lname,) if config.index.named else "index"
             attrs[iname] = Integer(big=True, unsigned=True, primary_key=True)
-            attrs["key"] = CompositeKey(length=config.flatkeysize)
+            if config.flatkeysize:
+                attrs["key"] = CompositeKey(length=config.flatkeysize)
             BasicMeta._prepAttrs(cls, lname, attrs, bases)
         return super(FlatMeta, cls).__new__(cls, name, bases, attrs)
 

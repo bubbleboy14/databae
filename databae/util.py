@@ -72,7 +72,9 @@ def ct_key(modelName, index):
 
 def merge_schemas(bases, label=None):
     kinds = {}
-    schema = { "key": "key_immutable" }
+    schema = {}
+    if config.flatkeysize:
+        schema["key"] = "key_immutable"
     if not config.index.named: # TODO : set named indexes!
         schema["index"] = "immutable"
     for base in bases:
