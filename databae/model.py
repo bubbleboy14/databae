@@ -141,7 +141,8 @@ class ModelCore(DeclarativeBase):
         return getattr(self, self.label) or self.ilabel
 
     def _basic(self, d):
-        d["key"] = self.id()
+        if config.flatkeysize:
+            d["key"] = self.id()
         d[self.iname] = self.ival
         d["modelName"] = self.polytype
         d["_label"] = self.label
