@@ -1,6 +1,5 @@
-import operator, base64, json, hashlib, requests
+import operator, base64, json, hashlib
 from datetime import datetime
-from six import string_types
 from fyg.util import log
 from .config import config
 
@@ -31,7 +30,7 @@ def get_iname(mod):
 
 def get_schema(modname=None):
     if modname:
-        if not isinstance(modname, string_types):
+        if not isinstance(modname, str):
             modname = modname.__name__
         return modelsubs[modname.lower()]._schema
     s = {}
@@ -90,6 +89,7 @@ def hashpass(password, date):
     return hashlib.md5((password + str(date.date()).replace('-','')).encode()).hexdigest()
 
 def blobify(d, blobifier, extant=None):
+    import requests
     for key, prop in list(get_schema(d["modelName"]).items()):
         if prop == "blob" and d[key]:
             entkey = d.get("gaekey", d["key"])
