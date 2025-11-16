@@ -2,7 +2,6 @@ import os, json, magic
 from base64 import b64decode
 from datetime import datetime
 from sqlalchemy import func
-from six import string_types
 from .util import *
 from .config import config
 
@@ -99,7 +98,7 @@ def b64d(compkey):
     return b64decode(pad_key(compkey)).decode()
 
 def key2data(b64compkey):
-    if not isinstance(b64compkey, string_types):
+    if not isinstance(b64compkey, str):
         b64compkey = b64compkey.urlsafe()
     return json.loads(b64d(b64compkey))
 
@@ -119,7 +118,7 @@ def get(b64compkey, session=None, model=None):
 
 def get_multi(b64keys, session=None):
     # b64keys can be Key instances or b64 key strings
-    if b64keys and not isinstance(b64keys[0], string_types):
+    if b64keys and not isinstance(b64keys[0], str):
         b64keys = [k.urlsafe() for k in b64keys]
     keys = [json.loads(b64d(k)) for k in b64keys]
     ents = {}
