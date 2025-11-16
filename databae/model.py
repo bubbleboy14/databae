@@ -1,6 +1,5 @@
 from sqlalchemy import orm
 from fyg.util import log, error
-from six import with_metaclass
 from .meta import *
 
 class ModelCore(DeclarativeBase):
@@ -158,7 +157,7 @@ class ModelCore(DeclarativeBase):
     def export(self):
         return self._basic(ModelCore.mydata(self, True))
 
-class FlatBase(with_metaclass(FlatMeta, ModelCore)):
+class FlatBase(ModelCore, metaclass=FlatMeta):
     __abstract__ = True
     label = "ival"
 
@@ -166,7 +165,7 @@ class FlatBase(with_metaclass(FlatMeta, ModelCore)):
     def polytype(self):
         return self.__class__.__name__
 
-class ModelBase(with_metaclass(PolyMeta, ModelCore)):
+class ModelBase(ModelCore, metaclass=PolyMeta):
     index = Integer(primary_key=True)
     polytype = String()
     key = CompositeKey()
