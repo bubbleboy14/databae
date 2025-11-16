@@ -1,7 +1,6 @@
 from sqlalchemy.sql import func, elements
 from fyg.util import log, start_timer, end_timer
 from fyg import config as confyg
-from six import string_types
 from .properties import *
 from .getters import *
 from .setters import *
@@ -31,7 +30,7 @@ class Query(object):
     def order(self, prop):
         if type(prop) == elements.UnaryExpression and "count" not in prop.element.description:
             prop = "-%s"%(prop.element.description,)
-        if isinstance(prop, string_types):
+        if isinstance(prop, str):
             asc = False
             if prop.startswith("-"):
                 prop = prop[1:]
