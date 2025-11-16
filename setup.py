@@ -13,10 +13,8 @@ setup(
     ],
     zip_safe = False,
     install_requires = [
-        "fyg >= 0.1.7.2",
-        "requests >= 2.3.0",
-        "sqlalchemy >= 2.0.30",
-        "six >= 1.12.0"
+        "fyg >= 0.1.7.8",
+        "sqlalchemy >= 2.0.30"
     ],
     entry_points = '''''',
     classifiers = [
