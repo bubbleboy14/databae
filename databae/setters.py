@@ -5,7 +5,6 @@ from .util import ct_key, get_iname
 from .config import config
 
 def _init_entity(instance, session=None, preserve_timestamps=False):
-    from .lookup import inc_counter, dec_counter
     puts = []
     now = datetime.now()
     cls = instance.__class__
@@ -17,6 +16,7 @@ def _init_entity(instance, session=None, preserve_timestamps=False):
             if not preserve_timestamps and getattr(val, "is_dt_autostamper", False) and val.should_stamp(not instance._has_complete_key()):
                 setattr(instance, key, now)
             if config.refcount and key in instance._orig_fkeys:
+                from .lookup import inc_counter, dec_counter
                 oval = instance._orig_fkeys[key]
                 val = getattr(instance, key)
                 if oval != val:
