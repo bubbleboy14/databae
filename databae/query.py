@@ -4,7 +4,7 @@ from fyg import config as confyg
 from .properties import *
 from .getters import *
 from .setters import *
-from .session import session, seshman, testSession, metadata, Session, handle_error, set_scoper, indexer
+from .session import seshman, testSession, metadata, Session, handle_error, set_scoper, indexer
 
 _passthru = ["count", "all"]
 _qmod = ["filter", "limit", "offset", "join"]
