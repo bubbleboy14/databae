@@ -16,7 +16,7 @@ def slog(*msg):
 
 def conn_ex(cmd, fetch=False):
 	log("issuing command: %s"%(cmd,), important=True)
-	with session.engine.connect() as conn:
+	with seshman.get().engine.connect() as conn:
 		result = conn.execute(text(cmd))
 		if fetch:
 			rows = result.fetchall()
@@ -204,15 +204,16 @@ class SessionManager(Basic):
 		self.dbs = {}
 		self.log("initialized")
 
-	def db(self, db=dcfg.main):
+	def db(self, db=None):
+		db = db or dcfg.main
 		if db not in self.dbs:
 			self.dbs[db] = DataBase(db)
 		return self.dbs[db]
 
-	def get(self, db=dcfg.main):
+	def get(self, db=None):
 		return self.db(db).session()
 
-	def close(self, db=dcfg.main):
+	def close(self, db=None):
 		self.db(db).close()
 
 Session._id = DataBase._id = SessionManager._id = 0
@@ -221,4 +222,3 @@ def testSession():
 	return seshman.get(dcfg.test)
 
 seshman = SessionManager()
-session = seshman.get()
