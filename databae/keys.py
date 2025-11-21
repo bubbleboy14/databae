@@ -1,4 +1,4 @@
-from .types import BasicString, BasicBig
+from .types import BasicString, BasicUnsignedBig
 from .getters import get
 from .config import config
 
@@ -53,14 +53,14 @@ class Key(BasicString):
 	def process_result_value(self, value, dialect):
 		return KeyWrapper(value)
 
-class IndexKey(BasicBig):
+class IndexKey(BasicUnsignedBig):
 	cache_ok = config.cache
 
 	def __init__(self, *args, **kwargs):
 		self.kind = kwargs.pop("kind")
 		if not isinstance(self.kind, str):
 			self.kind = self.kind.__name__.lower()
-		BasicBig.__init__(self, *args, **kwargs)
+		BasicUnsignedBig.__init__(self, *args, **kwargs)
 
 	def process_bind_param(self, value, dialect):
 		return value
