@@ -25,7 +25,7 @@ def _col(colClass, *args, **kwargs):
 	typeInstance = colClass(**kwargs)
 	if unsigned:
 		variant = getattr(mysqldialect, colClass.impl.__name__)
-		typeInstance.with_variant(variant(unsigned=True), "mysql")
+		typeInstance = typeInstance.with_variant(variant(unsigned=True), "mysql")
 	col = sqlalchemy.Column(typeInstance, *args, **cargs)
 	col._indexed = indexed
 	if hasattr(typeInstance, "choices"):
@@ -65,7 +65,7 @@ Int = sqlColumn(BasicInt)
 Big = sqlColumn(BasicBig)
 String = sqlColumn(BasicString)
 DateTime = sqlColumn(DateTimeAutoStamper)
-JSON = sqlVariableColumn(JSONText, JSONString, "notext")
+JSON = sqlVariableColumn(JSONString, JSONText, "jsontext")
 Binary = sqlColumn(Blob)
 CompositeKey = sqlColumn(Key)
 FlexForeignKey = sqlColumn(Key)
