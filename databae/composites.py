@@ -55,4 +55,4 @@ class ArrayString(ArrayBase, BasicString):
 		BasicString.__init__(self, *args, **kwargs)
 
 def ArrayType(**kwargs):
-	return (ArrayString if config.notext else ArrayText)(**kwargs)
+	return (ArrayText if config.arraytext else ArrayString)(**kwargs)
