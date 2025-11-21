@@ -13,7 +13,7 @@ def sqlForeignKey(targetClass, **kwargs):
 def ForeignKey(**kwargs):
 	kind = kwargs.get("kind")
 	if config.index.key and kind: # single-kind, non-repeating!
-		return IndexForeignKey(fkprop(kind), unsigned=True, **kwargs)
+		return IndexForeignKey(fkprop(kind), **kwargs)
 	else:
 		return FlexForeignKey(**kwargs)
 
