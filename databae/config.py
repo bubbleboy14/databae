@@ -10,7 +10,8 @@ config = Config({
 	"blob": "blob",
 	"alter": False, # add new columns to tables - sqlite only!
 	"echo": False,
-	"notext": False,
+	"jsontext": True,
+	"arraytext": True,
 	"stringsize": 500,
 	"flatkeysize": 80,
 	"index": {
