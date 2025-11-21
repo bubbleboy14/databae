@@ -21,6 +21,13 @@ class BigType(DynamicType):
 def bi_c(element, compiler, **kw):
     return "INTEGER"
 
+class BigUnsignedType(BigType):
+	pass
+
+@compiles(BigUnsignedType, 'mysql')
+def bui_c(element, compiler, **kw):
+    return "BIGINT UNSIGNED"
+
 def basicType(colClass, baseType=DynamicType):
 	cname = colClass.__name__
 	attrs = { "impl": colClass, "cache_ok": config.cache }
@@ -33,6 +40,7 @@ BasicString = basicType(sqlalchemy.VARCHAR, StringType)
 BasicText = basicType(sqlalchemy.UnicodeText)
 BasicInt = basicType(sqlalchemy.Integer)
 BasicBig = basicType(sqlalchemy.BIGINT, BigType)
+BasicUnsignedBig = basicType(sqlalchemy.BIGINT, BigUnsignedType)
 
 class DateTimeAutoStamper(BasicDT):
 	cache_ok = config.cache
