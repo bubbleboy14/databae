@@ -13,6 +13,10 @@ class BasicMeta(DeclarativeMeta):
     def query(cls, *args, **kwargs):
         return Query(cls, *args, **kwargs)
 
+    def get(cls, index):
+        icol = getattr(cls, getattr(cls, "indexname", "index"))
+        return cls.query(icol == index).get()
+
     def creationSQL(cls, recursive=False):
         csql = str(CreateTable(cls.__table__).compile(seshman.get().engine))
         if not recursive:
