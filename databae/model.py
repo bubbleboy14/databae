@@ -104,6 +104,10 @@ class ModelCore(DeclarativeBase):
     def _has_complete_key(self):
         return bool(self.id())
 
+    def update(self, propmap):
+        for key, val in propmap.items():
+            setattr(self, key, val)
+
     def mydata(self, isexport=False):
         cols = {}
         for key, prop in list(self._schema.items()):
