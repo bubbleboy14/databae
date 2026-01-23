@@ -78,19 +78,28 @@ def optimize(dbapi_connection, connection_record):
 	slog("optimize")
 	cursor.close()
 
-def add_column(mod, col): # sqlite only
+def add_column(mod, col, colrep=None):
 	log("adding '%s' to '%s'"%(col, mod))
-	conn_ex('ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col))
+	if colrep: # mysql style
+		addcmd = 'ALTER TABLE %s ADD %s %s'%(mod, col, colrep)
+	else: # sqlite style
+		addcmd = 'ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col)
+	conn_ex(addcmd)
 
-def handle_error(e, session=None, polytype=None, flag=" no such column: "):
+def handle_error(e, session=None, polytype=None, flag=" no such column: ", mysqlflag='Unknown column '):
 	log("Database operation failed: %s"%(e,), important=True)
 	import traceback
 	log("".join(traceback.TracebackException.from_exception(e).format()))
 	session = session or seshman.get()
-	raise_anyway = True
 	stre = str(e)
+	colrep = None
+	raise_anyway = True
+	mysqladd = mysqlflag in stre
+	if mysqladd:
+		log("Missing MYSQL column!")
+		flag = mysqlflag
 	if flag in stre:
-		target = stre.split(flag)[1].split(None, 1)[0]
+		target = stre.split(flag)[1].split(None, 1)[0].strip("'")
 		log("Missing column: %s"%(target,), important=True)
 		if dcfg.alter:
 			if "." in target:
@@ -98,11 +107,15 @@ def handle_error(e, session=None, polytype=None, flag=" no such column: "):
 			else:
 				tcol = target
 				tmod = polytype
-			if dcfg.alter == "auto" or confirm("Add missing column '%s' to table '%s' (sqlite-only!)"%(tcol, tmod), True):
+			if dcfg.alter == "auto" or confirm("Add missing column '%s' to table '%s'"%(tcol, tmod), True):
 				log("rolling back session")
 				session.rollback()
 				raise_anyway = False
-				add_column(tmod, tcol)
+				if mysqladd:
+					from .util import get_model
+					coltype = get_model(tmod).__table__.columns[tcol].type
+					colrep = coltype.compile(session.engine.dialect)
+				add_column(tmod, tcol, colrep)
 		else:
 			log("To auto-update columns, add 'DB_ALTER = True' to your ct.cfg (sqlite only!)", important=True)
 	if raise_anyway:
