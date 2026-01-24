@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from .util import get_model, blobify
 from .properties import KeyWrapper
 from .getters import get
@@ -12,10 +12,14 @@ def _trans_keylist(val):
 def _trans_datetime(val):
     return isinstance(val, datetime) and val or datetime.strptime(val, "%Y-%m-%d %H:%M:%S")
 
+def _trans_date(val):
+    return isinstance(val, (date, datetime)) and val or datetime.strptime(val, "%Y-%m-%d")
+
 ETRANS = {
     "key": _trans_key,
     "keylist": _trans_keylist,
-    "datetime": _trans_datetime
+    "datetime": _trans_datetime,
+    "date": _trans_date
 }
 def add_edit_transformation(ptype, func):
     ETRANS[ptype] = func
