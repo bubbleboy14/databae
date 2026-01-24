@@ -46,6 +46,8 @@ def dprep(obj, schema=None): # prepares data object for model
         if key in obj:
             if prop == "datetime" and obj[key]:
                 o[key] = datetime.strptime(obj[key].replace("T", " ").replace("Z", ""), "%Y-%m-%d %X")
+            if prop == "date" and obj[key]:
+                o[key] = datetime.strptime(obj[key][:10], "%Y-%m-%d")
 #            elif prop == "string" and isinstance(obj[key], str):
 #                o[key] = obj[key].encode("utf-8")
             elif key != "_label":

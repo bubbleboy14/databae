@@ -124,6 +124,8 @@ class ModelCore(DeclarativeBase):
                     val = val.urlsafe()
                 elif val and prop == "datetime":
                     val = str(val)[:19]
+                elif val and prop == "date":
+                    val = str(val)[:10]
                 elif prop in ["string", "text"]:
                     val = val or ""
                 cols[key] = val

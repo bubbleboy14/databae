@@ -1,6 +1,6 @@
 import os, json, magic
 from base64 import b64decode
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import func
 from .util import *
 from .config import config
@@ -24,6 +24,8 @@ def _apply_filter(query, key, obj, modelName, joinz):
         val = KeyWrapper(val)
     elif ptype == "datetime" and not isinstance(val, datetime):
         val = datetime.strptime(val, "%Y-%m-%d %H:%M:%S")
+    elif ptype == "date" and not isinstance(val, (date, datetime)):
+        val = datetime.strptime(val, "%Y-%m-%d")
     if comp == "like":
         query.filter(func.lower(prop).like(val.lower()))
     elif comp == "contains":
