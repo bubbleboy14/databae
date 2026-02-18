@@ -19,6 +19,8 @@ def ForeignKey(**kwargs):
 
 def Integer(**kwargs):
 	if kwargs.pop("big", False):
+		if kwargs.pop("unsigned", False):
+			return UnsignedBig(**kwargs)
 		return Big(**kwargs)
 	else:
 		return Int(**kwargs)

@@ -1,7 +1,7 @@
 import sqlalchemy
 from sqlalchemy.dialects import mysql as mysqldialect
 from .types import DynamicType, StringType, DateTimeAutoStamper
-from .types import basicType, BasicDT, BasicString, BasicText, BasicInt, BasicBig
+from .types import basicType, BasicDT, BasicString, BasicText, BasicInt, BasicBig, BasicUnsignedBig
 from .composites import JSONText, JSONString, ArrayType
 from .keys import KeyWrapper, Key, IndexKey
 from .blob import BlobWrapper, Blob
@@ -63,6 +63,7 @@ for prop in primis:
 
 Int = sqlColumn(BasicInt)
 Big = sqlColumn(BasicBig)
+UnsignedBig = sqlColumn(BasicUnsignedBig)
 String = sqlColumn(BasicString)
 DateTime = sqlColumn(DateTimeAutoStamper)
 JSON = sqlVariableColumn(JSONString, JSONText, "jsontext")
