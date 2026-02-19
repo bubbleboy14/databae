@@ -25,9 +25,9 @@ class KeyWrapper(object):
 	def get(self, session="main"):
 		return get(self.value, session, self.model)
 
-	def delete(self):
-		ent = self.get()
-		ent and ent.rm() # should be more efficient way...
+	def delete(self, session="main"):
+		ent = self.get(session=session)
+		ent and ent.rm(session=session) # should be more efficient way...
 
 	def urlsafe(self):
 		return self.value
