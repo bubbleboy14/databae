@@ -22,7 +22,7 @@ class KeyWrapper(object):
 	def __hash__(self):
 		return self.value if type(self.value) is int else sum([ord(c) for c in self.value])
 
-	def get(self, session=None):
+	def get(self, session="main"):
 		return get(self.value, session, self.model)
 
 	def delete(self):

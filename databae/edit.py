@@ -24,7 +24,7 @@ ETRANS = {
 def add_edit_transformation(ptype, func):
     ETRANS[ptype] = func
 
-def edit(data, session=None, blobifier=None):
+def edit(data, session="main", blobifier=None):
     haskey = "key" in data
     extant = haskey and get(data["key"], session)
     blobifier and blobify(data, blobifier, extant)

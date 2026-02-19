@@ -16,7 +16,7 @@ class Query(object):
         self.cols = kwargs.pop("cols", None)
         if self.cols and type(self.cols[0]) is str:
             self.cols = [getattr(self.mod, c) for c in self.cols]
-        self.session = kwargs.pop("session", None) or seshman.get()
+        self.session = seshman.get(kwargs.pop("session", "main"))
         sq = self.session.query
         self.query = kwargs.pop("query", None) or (self.cols and sq(*self.cols) or sq(mod))
         for fname in _passthru:

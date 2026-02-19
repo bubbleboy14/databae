@@ -86,11 +86,11 @@ def add_column(mod, col, colrep=None):
 		addcmd = 'ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col)
 	conn_ex(addcmd)
 
-def handle_error(e, session=None, polytype=None, flag=" no such column: ", mysqlflag='Unknown column '):
+def handle_error(e, session="main", polytype=None, flag=" no such column: ", mysqlflag='Unknown column '):
 	log("Database operation failed: %s"%(e,), important=True)
 	import traceback
 	log("".join(traceback.TracebackException.from_exception(e).format()))
-	session = session or seshman.get()
+	session = seshman.get(session)
 	stre = str(e)
 	colrep = None
 	raise_anyway = True
@@ -217,21 +217,23 @@ class SessionManager(Basic):
 		self.dbs = {}
 		self.log("initialized")
 
-	def db(self, db=None):
-		db = db or dcfg.main
+	def db(self, db="main"):
+		db = dcfg[db] or db
 		if db not in self.dbs:
 			self.dbs[db] = DataBase(db)
 		return self.dbs[db]
 
-	def get(self, db=None):
+	def get(self, db="main"):
+		if type(db) is not str:
+			return db # it's probably already a session...
 		return self.db(db).session()
 
-	def close(self, db=None):
+	def close(self, db="main"):
 		self.db(db).close()
 
 Session._id = DataBase._id = SessionManager._id = 0
 
 def testSession():
-	return seshman.get(dcfg.test)
+	return seshman.get("test")
 
 seshman = SessionManager()

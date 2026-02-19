@@ -4,7 +4,7 @@ from .edit import *
 from .util import ct_key, get_iname
 from .config import config
 
-def _init_entity(instance, session=None, preserve_timestamps=False):
+def _init_entity(instance, session="main", preserve_timestamps=False):
     puts = []
     now = datetime.now()
     cls = instance.__class__
@@ -33,8 +33,8 @@ def _init_entity(instance, session=None, preserve_timestamps=False):
                             puts.append(inc_counter(val, reference, session=session))
     return puts
 
-def init_multi(instances, session=None, preserve_timestamps=False):
-    session = session or seshman.get()
+def init_multi(instances, session="main", preserve_timestamps=False):
+    session = seshman.get(session)
     if preserve_timestamps:
         log("initializing %s instances -- preserving timestamps!"%(len(instances),))
     lookups = []
@@ -50,13 +50,13 @@ def init_multi(instances, session=None, preserve_timestamps=False):
                 ival = getattr(instance, iname)
                 instance.key = KeyWrapper(ct_key(instance.polytype, ival))
 
-def put_multi(instances, session=None, preserve_timestamps=False):
-    session = session or seshman.get()
+def put_multi(instances, session="main", preserve_timestamps=False):
+    session = seshman.get(session)
     batch(instances, init_multi, session, preserve_timestamps)
     session.commit()
 
-def delete_multi(instances, session=None):
-    session = session or seshman.get()
+def delete_multi(instances, session="main"):
+    session = seshman.get(session)
     for instance in instances:
         instance.rm(False, session)
     session.commit()

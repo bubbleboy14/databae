@@ -64,7 +64,7 @@ def _join(modelName, altname, joinz, query):
             break
     query.join(get_model(altname), mod1.key == mod2attr)
 
-def get_page(modelName, limit, offset, order=None, filters={}, session=None, count=False, exporter="export"):
+def get_page(modelName, limit, offset, order=None, filters={}, session="main", count=False, exporter="export"):
     model = get_model(modelName)
     order = order or getattr(model, "indexname", "index")
     query = model.query(session=session)
@@ -87,7 +87,7 @@ def get_page(modelName, limit, offset, order=None, filters={}, session=None, cou
         return query.count()
     return [getattr(d, exporter)() for d in query.fetch(limit, offset)]
 
-def getall(entity=None, query=None, keys_only=False, session=None):
+def getall(entity=None, query=None, keys_only=False, session="main"):
     if query:
         res = query.all()
     elif entity:
@@ -104,7 +104,7 @@ def key2data(b64compkey):
         b64compkey = b64compkey.urlsafe()
     return json.loads(b64d(b64compkey))
 
-def get(b64compkey, session=None, model=None):
+def get(b64compkey, session="main", model=None):
     if model:
         compkey = {
             "model": model,
@@ -118,7 +118,7 @@ def get(b64compkey, session=None, model=None):
             error("bad key: %s"%(b64compkey,))
     return modelsubs[compkey["model"]].query(session=session).query.get(compkey["index"])
 
-def get_multi(b64keys, session=None):
+def get_multi(b64keys, session="main"):
     # b64keys can be Key instances or b64 key strings
     if b64keys and not isinstance(b64keys[0], str):
         b64keys = [k.urlsafe() for k in b64keys]

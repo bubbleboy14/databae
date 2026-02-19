@@ -43,7 +43,7 @@ class ModelCore(DeclarativeBase):
     def __hash__(self):
         return self.key.__hash__()
 
-    def put(self, session=None):
+    def put(self, session="main"):
         try:
             put_multi([self], session)
         except Exception as e:
@@ -76,8 +76,8 @@ class ModelCore(DeclarativeBase):
     def afterremove(self, session):
         pass
 
-    def rm(self, commit=True, session=None):
-        session = session or seshman.get()
+    def rm(self, commit=True, session="main"):
+        session = seshman.get(session)
         self.beforeremove(session)
         session.delete(self)
         commit and session.commit()
