@@ -13,12 +13,12 @@ class BasicMeta(DeclarativeMeta):
     def query(cls, *args, **kwargs):
         return Query(cls, *args, **kwargs)
 
-    def get(cls, index):
+    def get(cls, index, session="main"):
         icol = getattr(cls, getattr(cls, "indexname", "index"))
-        return cls.query(icol == index).get()
+        return cls.query(icol == index, session=session).get()
 
-    def creationSQL(cls, recursive=False):
-        csql = str(CreateTable(cls.__table__).compile(seshman.get().engine))
+    def creationSQL(cls, recursive=False, session="main"):
+        csql = str(CreateTable(cls.__table__).compile(seshman.get(session).engine))
         if not recursive:
             return csql
         psgen = getattr(cls.__base__, "creationSQL", None)
