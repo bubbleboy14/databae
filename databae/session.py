@@ -14,10 +14,12 @@ def slog(*msg):
 	if "db" in confyg.log.allow:
 		log("[db] session | %s"%(" ".join([str(m) for m in msg]),))
 
-def conn_ex(cmd, fetch=False, session="main"):
+def conn_ex(cmd, fetch=False, commit=False, session="main"):
 	log("issuing command: %s"%(cmd,), important=True)
 	with seshman.get(session).engine.connect() as conn:
 		result = conn.execute(text(cmd))
+		if commit:
+			conn.execute("commit")
 		if fetch:
 			rows = result.fetchall()
 	if fetch:
