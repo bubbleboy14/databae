@@ -8,7 +8,11 @@ class JSONBase(object):
 		return json.dumps(value)
 
 	def process_result_value(self, value, dialect):
-		return json.loads(value or "{}")
+		try:
+			return json.loads(value or "{}")
+		except Exception as e:
+			print("JSONBase.process_result_value() failed to load:", value, "- got:", e)
+			raise e
 
 class JSONText(JSONBase, BasicText):
 	pass
