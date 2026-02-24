@@ -19,7 +19,7 @@ def conn_ex(cmd, fetch=False, commit=False, session="main"):
 	with seshman.get(session).engine.connect() as conn:
 		result = conn.execute(text(cmd))
 		if commit:
-			conn.execute("commit")
+			conn.commit()
 		if fetch:
 			rows = result.fetchall()
 	if fetch:
