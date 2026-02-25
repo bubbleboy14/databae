@@ -119,7 +119,7 @@ def handle_error(e, session="main", polytype=None, flag=" no such column: ", mys
 					colrep = coltype.compile(session.engine.dialect)
 				add_column(tmod, tcol, colrep)
 		else:
-			log("To auto-update columns, add 'DB_ALTER = True' to your ct.cfg (sqlite only!)", important=True)
+			log("To auto-update columns, add 'DB_ALTER = True' to your ct.cfg", important=True)
 	if raise_anyway:
 		error(e)
 
