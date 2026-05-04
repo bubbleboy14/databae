@@ -66,7 +66,7 @@ class ModelCore(DeclarativeBase):
 
     def beforeedit(self, edits):
         for prop in edits:
-            if prop in self._unique_cols and self.otherwith(prop, edits[prop]):
+            if prop in self._unique_cols and edits[prop] and self.otherwith(prop, edits[prop]):
                 print(prop, "conflict!\n\n")
                 return "%s must be unique"%(prop,)
 
