@@ -2,4 +2,4 @@
 
 DATabase ABstraction lAyEr
 
-v0.2.1.5
+v0.2.1.6
