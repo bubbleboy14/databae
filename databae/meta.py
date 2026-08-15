@@ -1,3 +1,4 @@
+from sqlalchemy import inspect as sqlinspect
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.schema import CreateTable
 from .query import *
@@ -24,6 +25,9 @@ class BasicMeta(DeclarativeMeta):
         psgen = getattr(cls.__base__, "creationSQL", None)
         base = psgen(True) if psgen else []
         return base + [csql]
+
+    def describe(cls, session="main"):
+        return sqlinspect(seshman.get(session).engine).get_columns(cls.__tablename__)
 
     def _prepAttrs(cls, lname, attrs, bases):
         if "label" not in attrs:
