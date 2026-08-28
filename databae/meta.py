@@ -1,6 +1,6 @@
 from sqlalchemy import inspect as sqlinspect
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
-from sqlalchemy.schema import CreateTable
+from sqlalchemy.schema import CreateTable, CreateIndex
 from .query import *
 
 def choice_validator(choices):
@@ -19,9 +19,25 @@ class BasicMeta(DeclarativeMeta):
         return cls.query(icol == index, session=session).get()
 
     def creationSQL(cls, recursive=False, session="main"):
-        csql = str(CreateTable(cls.__table__).compile(seshman.get(session).engine))
+        engine = seshman.get(session).engine
+        csql = str(CreateTable(cls.__table__).compile(engine))
+
+        indexes = [
+            str(CreateIndex(index).compile(engine))
+            for index in sorted(
+                cls.__table__.indexes,
+                key=lambda index: index.name or ""
+            )
+        ]
+        if indexes:
+            csql = "%s\n\n%s\n\n"%(
+                csql.rstrip(),
+                "\n".join(indexes)
+            )
+
         if not recursive:
             return csql
+
         psgen = getattr(cls.__base__, "creationSQL", None)
         base = psgen(True) if psgen else []
         return base + [csql]
