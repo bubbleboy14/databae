@@ -39,7 +39,7 @@ class BasicMeta(DeclarativeMeta):
             return csql
 
         psgen = getattr(cls.__base__, "creationSQL", None)
-        base = psgen(True) if psgen else []
+        base = psgen(recursive=True, session=session) if psgen else []
         return base + [csql]
 
     def describe(cls, session="main"):
