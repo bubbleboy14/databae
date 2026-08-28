@@ -1,3 +1,3 @@
 from .model import *
 
-__version__ = "0.2.1.6"
+__version__ = "0.2.1.7"
