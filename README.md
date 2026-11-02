@@ -12,7 +12,7 @@ from databae.config import config
 config.timeout.update("read", 30)
 config.timeout.update("write", 30)
 config.timeout.update("connect", 10)
-config.retry.update("reads", 2)
+config.retry.update("reads", 3)
 config.retry.update("delay", 0.25)
 ```
 
@@ -21,8 +21,8 @@ PyMySQL. Explicit timeout settings in the database URL take precedence. Other
 drivers keep their own connection settings; SQLite receives no PyMySQL options.
 
 `retry.reads` is the number of additional attempts after a transient connection
-failure on `get()`, `all()`, or `count()`. Two retries means three attempts, with
-delays of 0.25 and 0.5 seconds by default. These are per-attempt socket timeouts,
+failure on `get()`, `all()`, or `count()`. Three retries means four attempts, with
+delays of 0.25, 0.5 and 1 second by default. These are per-attempt socket timeouts,
 not a deadline for the whole operation. Set `config.retry.update("reads", 0)`
 to disable retries.
 
