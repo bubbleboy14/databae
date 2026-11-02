@@ -32,8 +32,13 @@ created with `close_resets_only=False` cannot retry after invalidation. Locking 
 and reads that flush writes are excluded. A failed connection is invalidated
 before another attempt so it cannot be reused.
 
-Other failures roll back the session and raise the original exception. Writes
-and transactions are never automatically replayed after connection failure: the
-caller must decide whether to retry the entire operation, including handling an
-ambiguous commit result. The existing optional missing-column repair still gets
-one retry after repair.
+Terminal failures clean up the session before calling `fyg.util.error()`,
+preserving the application's registered error callback (including cantools'
+normal failure response). Without a callback, fyg exits with `SystemExit`. If a
+callback returns, databae raises the original exception so a failed operation
+cannot silently continue. Intermediate connection retries only log the error.
+
+Writes and transactions are never automatically replayed after connection
+failure: the caller must decide whether to retry the entire operation, including
+handling an ambiguous commit result. The existing optional missing-column repair
+still gets one retry after repair.
