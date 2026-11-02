@@ -23,6 +23,10 @@ config = Config({
 		"write": 30,
 		"connect": 10
 	},
+	"retry": {
+		"reads": 2,
+		"delay": 0.25
+	},
 	"pool": {
 		"null": True,
 		"size": 10,
