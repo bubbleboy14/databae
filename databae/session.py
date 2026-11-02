@@ -176,11 +176,19 @@ class DataBase(Basic):
 	def __init__(self, db=dcfg.main):
 		DataBase._id += 1
 		self.id = DataBase._id
+		tos = dcfg.timeout
+		cargs = {
+			"read_timeout": tos.read,
+			"write_timeout": tos.write,
+			"connect_timeout": tos.connect
+		}
 		if pcfg.null:
-			self.engine = create_engine(db, poolclass=NullPool, echo=dcfg.echo)
+			self.engine = create_engine(db, poolclass=NullPool,
+				echo=dcfg.echo, connect_args=cargs)
 		else:
 			self.engine = create_engine(db, pool_size=pcfg.size,
-				max_overflow=pcfg.overflow, pool_recycle=pcfg.recycle, echo=dcfg.echo)
+				max_overflow=pcfg.overflow, pool_recycle=pcfg.recycle,
+				echo=dcfg.echo, connect_args=cargs)
 		self.sessions = {}
 		self._ready = False
 		self.log("initialized")
