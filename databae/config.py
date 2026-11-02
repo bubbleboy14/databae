@@ -24,7 +24,7 @@ config = Config({
 		"connect": 10
 	},
 	"retry": {
-		"reads": 2,
+		"reads": 3,
 		"delay": 0.25
 	},
 	"pool": {
