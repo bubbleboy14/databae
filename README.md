@@ -2,7 +2,7 @@
 
 DATabase ABstraction lAyEr
 
-v0.2.1.7
+v0.2.1.8
 
 Database recovery settings live in `databae.config.config`:
 
