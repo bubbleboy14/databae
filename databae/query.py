@@ -1,10 +1,15 @@
-from sqlalchemy.sql import func, elements
+from time import sleep
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import UnboundExecutionError
+from sqlalchemy.sql import func, elements, visitors
 from fyg.util import log, start_timer, end_timer
 from fyg import config as confyg
 from .properties import *
+from .config import config
 from .getters import *
 from .setters import *
-from .session import seshman, testSession, metadata, Session, handle_error, set_scoper, indexer
+from .session import seshman, testSession, metadata, Session, handle_error, connection_error, set_scoper, indexer
 
 _passthru = ["count", "all"]
 _qmod = ["filter", "limit", "offset", "join"]
@@ -50,18 +55,66 @@ class Query(object):
 
     def _qpass(self, fname):
         def qp(*args, **kwargs):
-            qkey = "Query.%s: %s %s (%s)"%(fname, args, kwargs, self.query)
-            if "query" in confyg.log.allow:
+            timed = "query" in confyg.log.allow
+            if timed:
+                qkey = "Query.%s: %s %s (%s)"%(fname, args, kwargs, self.query)
+            session = self.query.session
+            # invalidate() permanently closes close_resets_only=False sessions.
+            # SQLAlchemy has no public getter for this flag; unknown states do not retry.
+            reusable = getattr(getattr(session, "_close_state", None), "name", None) == "CLOSE_IS_RESET"
+            # Even a SELECT may autoflush writes or depend on earlier work.
+            # Retrying is limited to an independent read on an empty session.
+            try:
+                safe_read = (reusable and not session.in_transaction() and not session.new and
+                    not session.dirty and not session.deleted and not session.identity_map)
+                if safe_read:
+                    statement = self.query.statement
+                    safe_read = (isinstance(session.get_bind(clause=statement), Engine) and
+                        getattr(statement, "is_select", False) and
+                        all(not getattr(part, "is_dml", False) and
+                            getattr(part, "_for_update_arg", None) is None
+                            for part in visitors.iterate(statement)))
+            except UnboundExecutionError:
+                # Let execution report the error through the normal application hook.
+                safe_read = False
+            retries = max(0, int(config.retry.reads)) if safe_read else 0
+            delay = max(0, float(config.retry.delay)) if retries else 0
+            # A do_orm_execute hook can add writes after the empty-session check.
+            # Autoflush then clears new/dirty/deleted; latch it to prevent a retry
+            # from silently discarding those writes after a connection failure.
+            flushed = False
+            def before_flush(*unused):
+                nonlocal flushed
+                flushed = True
+            if retries:
+                event.listen(session, "before_flush", before_flush)
+            attempt = 0
+            repaired = False
+            if timed:
                 start_timer(qkey)
             try:
-                res = getattr(self.query, fname)(*args, **kwargs)
-            except Exception as e:
-                handle_error(e, self.session)
-                log("retrying query operation")
-                res = getattr(self.query, fname)(*args, **kwargs)
-            if "query" in confyg.log.allow:
-                end_timer(qkey)
-            return res
+                while True:
+                    try:
+                        return getattr(self.query, fname)(*args, **kwargs)
+                    except Exception as e:
+                        disconnected = connection_error(e, session)
+                        handle_error(e, session,
+                            retry=disconnected and not flushed and not session.new and
+                                not session.dirty and not session.deleted and attempt < retries,
+                            repair=not repaired)
+                        if disconnected:
+                            attempt += 1
+                            log("retrying database read %s of %s"%(attempt, retries))
+                            sleep(delay * 2 ** (attempt - 1))
+                        else:
+                            # Preserve the existing one-retry missing-column repair.
+                            repaired = True
+                            log("retrying query operation after schema repair")
+            finally:
+                if retries:
+                    event.remove(session, "before_flush", before_flush)
+                if timed:
+                    end_timer(qkey)
         return qp
 
     def _qmlam(self, fname):

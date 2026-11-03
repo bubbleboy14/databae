@@ -18,6 +18,15 @@ config = Config({
 		"key": False,
 		"named": False
 	},
+	"timeout": {
+		"read": 60,
+		"write": 30,
+		"connect": 10
+	},
+	"retry": {
+		"reads": 3,
+		"delay": 2
+	},
 	"pool": {
 		"null": True,
 		"size": 10,

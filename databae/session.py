@@ -1,6 +1,7 @@
 import threading
 from sqlalchemy.pool import NullPool
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, make_url
+from sqlalchemy.exc import DBAPIError, UnboundExecutionError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import create_engine, MetaData, text, event
 from fyg.util import log, error, confirm, Loggy
@@ -88,11 +89,54 @@ def add_column(mod, col, colrep=None):
 		addcmd = 'ALTER TABLE "%s" ADD COLUMN "%s"'%(mod, col)
 	conn_ex(addcmd)
 
-def handle_error(e, session="main", polytype=None, flag=" no such column: ", mysqlflag='Unknown column '):
+def connection_error(e, session):
+	if not isinstance(e, DBAPIError):
+		return False
+	if e.connection_invalidated:
+		return True
+	# A failed initial connection has no Connection for SQLAlchemy to invalidate.
+	args = getattr(e.orig, "args", ())
+	if not args or args[0] not in (2002, 2003, 2006, 2013, 2055):
+		return False
+	try:
+		bind = session.get_bind()
+	except UnboundExecutionError:
+		return False
+	return bind.dialect.name in ("mysql", "mariadb")
+
+def reset_session(session, disconnect=False):
+	try:
+		if disconnect:
+			session.invalidate()
+		else:
+			session.rollback()
+		return True
+	except Exception as cleanup_error:
+		# Cleanup must not mask the error that interrupted the operation.
+		log("Database session cleanup failed: %s"%(type(cleanup_error).__name__,))
+		if not disconnect:
+			try:
+				session.invalidate()
+				return True
+			except Exception as invalidate_error:
+				log("Database session invalidation failed: %s"%(type(invalidate_error).__name__,))
+		return False
+
+def handle_error(e, session="main", polytype=None, flag=" no such column: ", mysqlflag='Unknown column ', retry=False, repair=True):
 	log("Database operation failed: %s"%(e,), important=True)
 	import traceback
 	log("".join(traceback.TracebackException.from_exception(e).format()))
 	session = seshman.get(session)
+	# Work directly with the current ORM session: the databae wrapper would run
+	# database initialization again before rollback, which can itself need I/O.
+	orm_session = session.session if isinstance(session, Session) else session
+	if connection_error(e, orm_session):
+		cleaned = reset_session(orm_session, disconnect=True)
+		if retry and cleaned:
+			return
+		error(e)
+		# A returning application error callback must not trigger write replay.
+		raise e
 	stre = str(e)
 	colrep = None
 	raise_anyway = True
@@ -100,7 +144,7 @@ def handle_error(e, session="main", polytype=None, flag=" no such column: ", mys
 	if mysqladd:
 		log("Missing MYSQL column!")
 		flag = mysqlflag
-	if flag in stre:
+	if repair and flag in stre:
 		target = stre.split(flag)[1].split(None, 1)[0].strip("'")
 		log("Missing column: %s"%(target,), important=True)
 		if dcfg.alter:
@@ -111,17 +155,19 @@ def handle_error(e, session="main", polytype=None, flag=" no such column: ", mys
 				tmod = polytype
 			if dcfg.alter == "auto" or confirm("Add missing column '%s' to table '%s'"%(tcol, tmod), True):
 				log("rolling back session")
-				session.rollback()
+				orm_session.rollback()
 				raise_anyway = False
 				if mysqladd:
 					from .util import get_model
 					coltype = get_model(tmod).__table__.columns[tcol].type
-					colrep = coltype.compile(session.engine.dialect)
+					colrep = coltype.compile(orm_session.get_bind().dialect)
 				add_column(tmod, tcol, colrep)
 		else:
 			log("To auto-update columns, add 'DB_ALTER = True' to your ct.cfg", important=True)
 	if raise_anyway:
+		reset_session(orm_session)
 		error(e)
+		raise e
 
 def threadname():
 	return threading.currentThread().getName()
@@ -176,11 +222,21 @@ class DataBase(Basic):
 	def __init__(self, db=dcfg.main):
 		DataBase._id += 1
 		self.id = DataBase._id
+		tos = dcfg.timeout
+		url = make_url(db)
+		cargs = {}
+		if url.get_backend_name() in ("mysql", "mariadb") and url.get_driver_name() == "pymysql":
+			# Explicit URL settings override databae's defaults. Other drivers
+			# (including SQLite) must not receive PyMySQL-specific arguments.
+			cargs = {name + "_timeout": tos[name] for name in ("read", "write", "connect")
+				if name + "_timeout" not in url.query}
 		if pcfg.null:
-			self.engine = create_engine(db, poolclass=NullPool, echo=dcfg.echo)
+			self.engine = create_engine(db, poolclass=NullPool,
+				echo=dcfg.echo, connect_args=cargs)
 		else:
 			self.engine = create_engine(db, pool_size=pcfg.size,
-				max_overflow=pcfg.overflow, pool_recycle=pcfg.recycle, echo=dcfg.echo)
+				max_overflow=pcfg.overflow, pool_recycle=pcfg.recycle,
+				echo=dcfg.echo, connect_args=cargs)
 		self.sessions = {}
 		self._ready = False
 		self.log("initialized")
