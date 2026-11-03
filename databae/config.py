@@ -19,13 +19,13 @@ config = Config({
 		"named": False
 	},
 	"timeout": {
-		"read": 30,
+		"read": 60,
 		"write": 30,
 		"connect": 10
 	},
 	"retry": {
 		"reads": 3,
-		"delay": 0.25
+		"delay": 2
 	},
 	"pool": {
 		"null": True,

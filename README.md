@@ -9,11 +9,11 @@ Database recovery settings live in `databae.config.config`:
 ```python
 from databae.config import config
 
-config.timeout.update("read", 30)
+config.timeout.update("read", 60)
 config.timeout.update("write", 30)
 config.timeout.update("connect", 10)
 config.retry.update("reads", 3)
-config.retry.update("delay", 0.25)
+config.retry.update("delay", 2)
 ```
 
 The timeout values are seconds and apply to MySQL/MariaDB connections using
@@ -22,7 +22,7 @@ drivers keep their own connection settings; SQLite receives no PyMySQL options.
 
 `retry.reads` is the number of additional attempts after a transient connection
 failure on `get()`, `all()`, or `count()`. Three retries means four attempts, with
-delays of 0.25, 0.5 and 1 second by default. These are per-attempt socket timeouts,
+delays of 2, 4 and 8 seconds by default. These are per-attempt socket timeouts,
 not a deadline for the whole operation. Set `config.retry.update("reads", 0)`
 to disable retries.
 
