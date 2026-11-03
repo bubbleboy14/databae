@@ -19,11 +19,11 @@ config.retry.update("delay", 2)
 The timeout values are seconds and apply to MySQL/MariaDB connections using
 PyMySQL. Explicit timeout settings in the database URL take precedence. Other
 drivers keep their own connection settings; SQLite receives no PyMySQL options.
+These are per-attempt socket timeouts, not a deadline for the whole operation.
 
 `retry.reads` is the number of additional attempts after a transient connection
 failure on `get()`, `all()`, or `count()`. Three retries means four attempts, with
-delays of 2, 4 and 8 seconds by default. These are per-attempt socket timeouts,
-not a deadline for the whole operation. Set `config.retry.update("reads", 0)`
+delays of 2, 4 and 8 seconds by default. Set `config.retry.update("reads", 0)`
 to disable retries.
 
 Transparent retries require an independent SELECT with an engine-bound, reusable
